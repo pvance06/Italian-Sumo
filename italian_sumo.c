@@ -19,57 +19,75 @@ pinMode(lineSensorRight, INPUT);
 // Movement functions
 const float DEGREES_PER_PULSE = 5.0;
 
-void forward(int pulses = 1) {
-	for(int i = 0; i < pulses; i++) {
-	}
+void forward() {
+	servoLeft.write(CCW);
+	servoRight.write(CW);
 }
 
-void reverse(int pulses = 1) {
+void reverse() {
+	servoLeft.write(CW);
+	servoRight.write(CCW);
 }
 
-void turnLeft(int degrees = 90) {
+void turnLeft() {
+	servoLeft.write(CW);
+	servoRight.write(CW);
 }
 
-void adjustLeft(int pulses = 1) {
-	for(int i = 0; i < pulses; i++) {
-		if(i % 2 == 1) { servoLeft.write(STOP); }
-		else { servoLeft.write(CCW); }
-		servoRight.write(CW);
-	}
+void adjustLeft() {
+	servoLeft.write(STOP);
+	servoRight.write(CW);
 }
 
-void turnRight(int degrees = 90) {
-	int pulses = degrees / DEGREES_PER_PULSE;
+void turnRight() {
 	servoLeft.write(CCW);
 	servoRight.write(CCW);
 }
 
-void adjustRight(int pulses = 1) {
-	for(int i = 0; i < pulses; i++) {
-		if(i % 2 == 1) { servoRight.write(STOP); }
-		else { servoRight.write(CW); }
-		servoLeft.write(CCW);
-	}
+void adjustRight() {
+	servoRight.write(STOP);
+	servoLeft.write(CCW);
 }
 
 // Detection functions
-int lookForLine() {
-	boolean seeLineLeft = digitalRead(lineSensorLeft);
-	boolean seeLineRight = digitalRead(lineSensorRight);
-	
-	if(seeLineLeft && seeLineRight) {
-		reverse(3);
-		right(135);
-	}
-	else if(seeLineLeft) {
-		reverse(3);
-		right(45);
-	}
-	else if(seeLineRight) {
-		reverse(3);
-		left(45);
-	}
+void lookForLine() {
+	if(digitalRead(lineSensorLeft) == HIGH) { seeLineLeft = currentPulse; }
+	if(digitalRead(lineSensorRight) == HIGH) { seeLineRight = currentPulse; }
+}
+
+// Loop
+int currentPulse = 0;
+int seeLineLeft = 0;
+int seeLineRight = 0;
+int enemySeen = 0;
+
+int timeSince(int timer, int limit) {
+	return currentPulse - timer < limit;
 }
 
 void loop() {
+	lookForLine();
+	lookForEnemy();
+	
+	switch() {
+		case timeSince(seeLineLeft, 20) && timeSince(seeLineRight, 20): reverse(); break;
+		case timeSince(seeLineLeft, 40) && timeSince(seeLineRight, 40): turnRight(); break;
+		
+		case timeSince(seeLineLeft, 20): reverse(); break;
+		case timeSince(seeLineLeft, 40): turnRight(); break;
+		
+		case timeSince(seeLineRight, 20): reverse(); break;
+		case timeSince(seeLineRight, 40): turnLeft(); break;
+		
+		case timeSince(enemySeen, 20): /* Charge at enemy */ break;
+		
+		case timeSince(start, 5): forward(); break;
+		case timeSince(start, 10): adjustLeft(); break;
+		case timeSince(start, 15): adjustRight(); break;
+		
+		case currentPulse / 100 % 2 == 0: forward();
+		case currentPulse / 100 % 2 == 1: turnRight();
+	}
+	
+	currentPulse++;
 }
