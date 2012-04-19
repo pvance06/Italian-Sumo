@@ -16,6 +16,13 @@ const int lineSensorRight = 1;
 pinMode(lineSensorLeft, INPUT);
 pinMode(lineSensorRight, INPUT);
 
+// Initialize distance sensors
+#define distSensorLeft A0
+#define distSensorRight A1
+
+const int THRESHOLD_FAR = 30;
+const int THRESHOLD_CLOSE = 50;
+
 // Movement functions
 const float DEGREES_PER_PULSE = 5.0;
 
@@ -50,16 +57,41 @@ void adjustRight() {
 }
 
 // Detection functions
+int seeLineLeft = 0;
+int seeLineRight = 0;
 void lookForLine() {
 	if(digitalRead(lineSensorLeft) == HIGH) { seeLineLeft = currentPulse; }
 	if(digitalRead(lineSensorRight) == HIGH) { seeLineRight = currentPulse; }
 }
 
+int seeEnemyLeft_far = 0;
+int seeEnemyLeft_close = 0;
+int seeEnemyRight_far = 0;
+int seeEnemyRight_close = 0;
+void lookForEnemy() {
+	int leftLevel = analogRead(distSensorLeft) / 10;
+	switch() {
+		case leftLevel > THRESHOLD_NEAR:
+			seeEnemyLeft_close = currentPulse;
+			break;
+		case leftLevel > THRESHOLD_FAR:
+			seeEnemyLeft_far = currentPulse;
+			break;
+	}
+	
+	int rightLevel = analogRead(distSensorRight) / 10;
+	switch() {
+		case rightLevel > THRESHOLD_CLOSE:
+			seeEnemyRight_close = currentPulse;
+			break;
+		case rightLevel > THRESHOLD_FAR:
+			seeEnemyRight_far = currentPulse;
+			break;
+	}
+}
+
 // Loop
 int currentPulse = 0;
-int seeLineLeft = 0;
-int seeLineRight = 0;
-int enemySeen = 0;
 
 int timeSince(int timer, int limit) {
 	return currentPulse - timer < limit;
@@ -67,7 +99,9 @@ int timeSince(int timer, int limit) {
 
 void loop() {
 	lookForLine();
-	lookForEnemy();
+	if(!timeSince(seeEnemyLeft_close, 10) && !timeSince(seeEnemyRight_close, 10)) {
+		lookForEnemy();
+	}
 	
 	switch() {
 		case timeSince(seeLineLeft, 20) && timeSince(seeLineRight, 20): reverse(); break;
