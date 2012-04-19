@@ -27,13 +27,13 @@ const int THRESHOLD_CLOSE = 50;
 const float DEGREES_PER_PULSE = 5.0;
 
 void forward() {
-	servoLeft.write(CCW);
-	servoRight.write(CW);
+	servoLeft.write(CW);
+	servoRight.write(CCW);
 }
 
 void reverse() {
-	servoLeft.write(CW);
-	servoRight.write(CCW);
+	servoLeft.write(CCW);
+	servoRight.write(CW);
 }
 
 void turnLeft() {
@@ -42,8 +42,8 @@ void turnLeft() {
 }
 
 void adjustLeft() {
-	servoLeft.write(STOP);
-	servoRight.write(CW);
+	servoLeft.write(CW);
+	servoRight.write(STOP);
 }
 
 void turnRight() {
